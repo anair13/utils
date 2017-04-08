@@ -1,0 +1,5 @@
+export POKE_DIR="/media/ashvin/Data/ashvin"
+export PYTHONPATH="${PYTHONPATH}:${POKE_DIR}/python:${POKE_DIR}/tensorflow_utils:${POKE_DIR}/dataset_utils:${POKE_DIR}/pycaffe-utils:${POKE_DIR}/pokebot/baxter-poke-prediction"
+export POKE_PROJECT_DIR="${POKE_DIR}/pokebot/baxter-poke-prediction/"
+export POKE_TF_DIR="${POKE_DIR}/tf-data/"
+export POKE_DATA_DIR="/media/ashvin/Data/arena/"

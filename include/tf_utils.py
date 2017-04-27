@@ -309,22 +309,27 @@ class TFNet(object):
   #save the model
   def save_model(self, sess, step):
     svPath = osp.join(self.modelDir_, 'model')
+    print "saving model to", svPath
     ou.mkdir(svPath)
     self.saver_.save(sess, svPath, global_step=step)
 
-  def restore_model(self, sess, i=None):
+  def restore_model(self, sess, i=None, modelDir=None):
     # print "restore called with", i
+    if type(modelDir) != str:
+      modelDir = self.modelDir_
+    print "RESTORING FROM"
+    print modelDir
     if i is not None:
-      path = osp.join(self.modelDir_, 'model-' + str(i))
+      path = osp.join(modelDir, 'model-' + str(i))
       print path
-      if not os.path.exists(self.modelDir_):
+      if not os.path.exists(modelDir):
         print "checkpoint not found"
         return None # not found
       self.saver_.restore(sess, path)
       # print "Checkpoint found and restored:", path
       return path
     # else
-    ckpt = tf.train.get_checkpoint_state(self.modelDir_)
+    ckpt = tf.train.get_checkpoint_state(modelDir)
     if ckpt and ckpt.model_checkpoint_path:
       print "Checkpoint found and restored:", ckpt.model_checkpoint_path
       self.saver_.restore(sess, ckpt.model_checkpoint_path)
@@ -444,7 +449,7 @@ class TFMain(object):
 #Helper class for easily training TFNets
 class TFTrain(TFMain):
   def __init__(self, ipVar, tfNet, solverType='adam', initLr=1e-3,
-        maxIter=100000, dispIter=1000, logIter=100, saveIter=1000, batchSz=128, testIter=1000):
+        maxIter=100000, dispIter=1000, logIter=100, saveIter=1000, batchSz=128, testIter=1000, var_list=None):
     TFMain.__init__(self, ipVar, tfNet)
     self.maxIter_  = maxIter
     self.dispIter_ = dispIter
@@ -467,7 +472,7 @@ class TFTrain(TFMain):
       raise Exception('Solver not recognized')
 
     #gradient computation
-    grads = self.opt_.compute_gradients(self.loss_)
+    grads = self.opt_.compute_gradients(self.loss_, var_list=var_list)
     self.grads_ = []
     for grad, var in grads:
       if grad is not None:
@@ -574,14 +579,19 @@ class TFTrain(TFMain):
       exclude = ["Adam", "beta", "iteration"]
       all_var_names = [v for v in all_var_names if not any([e in v for e in exclude])]
       print "all vars", all_var_names
-      with tf.variable_scope("", reuse=True):
-        net_vars = [tf.get_variable(v) for v in vars_to_restore if v + ":0" in all_var_names]
+      net_vars = []
+      for v in vars_to_restore:
+        if not (v + ":0" in all_var_names):
+          continue
+        V = v.split('/')
+        with tf.variable_scope(V[0], reuse=True):
+          net_vars.append(tf.get_variable("/".join(V[1:])))
       restorer = tf.train.Saver(net_vars)
       restorer.restore(sess, init_path)
       print "weights initialized"
 
     if use_existing: # use existing saved models
-      self.tfNet_.restore_model(sess)
+      self.tfNet_.restore_model(sess, modelDir=use_existing)
 
     start = self.iter_.eval(session=sess)
     self.iter_.assign_add(1)

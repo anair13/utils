@@ -127,3 +127,4 @@ export ASHUTILS="/home/ashvin/utils"
 source $ASHUTILS/paths.sh
 
 export PYTHONPATH=$PYTHONPATH:/home/ashvin/lsdc/python/
+export DISPLAY=:0

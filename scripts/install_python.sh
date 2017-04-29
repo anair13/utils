@@ -1,7 +1,7 @@
 sudo apt-get install git vim
 sudo apt-get install python-pip python-dev python-virtualenv python-pip python-tk
-sudo apt-get install python-cv2
-pip install matplotlib easydict numpy lmdb scikit-image
+sudo apt-get install python-opencv
+pip install moviepy h5py matplotlib easydict numpy lmdb scikit-image
 
 virtualenv --system-site-packages ~/tensorflow11
 source ~/tensorflow11/bin/activate

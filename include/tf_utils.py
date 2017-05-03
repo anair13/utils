@@ -289,7 +289,7 @@ class TFNet(object):
     self.summaryOp_ = tf.merge_all_summaries()
     #Create a saver for saving all the model files
     #max_to_keep: number of checkpoints to save
-    self.saver_     = tf.train.Saver(tf.all_variables(), max_to_keep=None,
+    self.saver_     = tf.train.Saver(tf.all_variables(), max_to_keep=2,
                        name=self.modelName_)
 
   #save the summaries
@@ -535,7 +535,7 @@ class TFTrain(TFMain):
 
   ##
   #train the net
-  def train(self, train_data_fn, val_data_fn, trainArgs=[], valArgs=[], use_existing=False, gpu_fraction=1.0, dump_to_output=None, vgg_init=False, init_path=None, sess=None):
+  def train(self, train_data_fn, val_data_fn, trainArgs=[], valArgs=[], use_existing=False, gpu_fraction=1.0, dump_to_output=None, vgg_init=False, init_path=None, sess=None, model=None, tracking_tensors=[]):
     '''
       train_data_fn: returns feed_dict for train data
       val_data_fn  : returns feed_dict for val data
@@ -627,7 +627,10 @@ class TFTrain(TFMain):
           self.print_display_str(i, self.lossNames_['val'], valLosses, False)
 
       else:
-        ops    = self.step_by_1(sess, trainDat, evalOps = self.lossSmmry_['train'])
+        ops    = self.step_by_1(sess, trainDat, evalOps = self.lossSmmry_['train'] + tracking_tensors)
+        if model and tracking_tensors:
+          model.tracking_tensors = ops[-len(tracking_tensors):]
+
         ovLoss = ops[0]
         N      = len(self.lossOps_)
         self.tfNet_.save_summary(ops[1:N+1], sess, i)
